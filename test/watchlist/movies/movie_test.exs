@@ -5,7 +5,13 @@ defmodule Watchlist.Movies.MovieTest do
 
   describe "insert_changeset/2" do
     test "returns valid changeset for given params" do
-      params = %{"title" => "Star Wars"}
+      params = %{
+        "title" => "Star Wars",
+        "imdb_url" => "https://www.imdb.com/title/tt0120915",
+        "genre" => "action",
+        "rate" => 9
+      }
+
       changeset = Movie.insert_changeset(%Movie{}, params)
 
       assert changeset.valid?
@@ -28,6 +34,34 @@ defmodule Watchlist.Movies.MovieTest do
       refute changeset.valid?
 
       assert %{title: ["can't be blank"]} = errors_on(changeset)
+    end
+
+    test "validates correctness of `genre`" do
+      params = %{"genre" => "invalid"}
+
+      changeset = Movie.insert_changeset(%Movie{}, params)
+
+      refute changeset.valid?
+
+      assert %{genre: ["is invalid"]} = errors_on(changeset)
+    end
+
+    test "validates rate range" do
+      params = %{"rate" => -1}
+
+      changeset = Movie.insert_changeset(%Movie{}, params)
+
+      refute changeset.valid?
+
+      assert %{rate: ["must be greater than or equal to 1"]} = errors_on(changeset)
+
+      params = %{"rate" => 11}
+
+      changeset = Movie.insert_changeset(%Movie{}, params)
+
+      refute changeset.valid?
+
+      assert %{rate: ["must be less than or equal to 10"]} = errors_on(changeset)
     end
 
     test "validates length for given params" do

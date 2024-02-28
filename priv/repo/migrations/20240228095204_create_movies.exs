@@ -8,6 +8,8 @@ defmodule Watchlist.Repo.Migrations.CreateMovies do
       add :title, :string, null: false
       add :imdb_url, :string
       add :watchlist_id, :bigint, null: false
+      add :genre, :string
+      add :rate, :integer
     end
 
     create index(:movies, :watchlist_id)

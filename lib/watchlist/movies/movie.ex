@@ -7,11 +7,16 @@ defmodule Watchlist.Movies.Movie do
 
   @imdb_url_regex ~r{^https:\/\/www\.imdb\.com/title/tt.+$}
   @default_watchlist_id 1
+  @genres ~w(action drama triller horror comedy)a
+  @minimum_rating 1
+  @maximum_rating 10
 
   schema "movies" do
     field :title, :string
     field :imdb_url, :string
     field :watchlist_id, :integer
+    field :genre, Ecto.Enum, values: @genres
+    field :rate, :integer
   end
 
   def default_watchlist_id(), do: @default_watchlist_id
@@ -19,10 +24,15 @@ defmodule Watchlist.Movies.Movie do
   @spec insert_changeset(__MODULE__.t(), map()) :: Ecto.Changeset.t()
   def insert_changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:title, :imdb_url])
+    |> cast(params, [:title, :imdb_url, :rate, :genre])
     |> change(watchlist_id: @default_watchlist_id)
     |> validate_title()
     |> validate_imdb_url()
+    |> validate_number(:rate,
+      greater_than_or_equal_to: @minimum_rating,
+      less_than_or_equal_to: @maximum_rating
+    )
+    |> validate_inclusion(:genre, @genres)
   end
 
   defp validate_title(changeset) do

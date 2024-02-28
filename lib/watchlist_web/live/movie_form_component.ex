@@ -28,6 +28,21 @@ defmodule WatchlistWeb.MoveFormComponent do
               placeholder={gettext("Imdb url")}
               phx-debounce="blur"
             />
+            <.input
+              field={@form[:rate]}
+              type="number"
+              placeholder={gettext("7")}
+              phx-debounce="blur"
+              min="1"
+              max="10"
+              step="1"
+            />
+            <.input
+              field={@form[:genre]}
+              type="select"
+              prompt={gettext("Select")}
+              options={genre_options()}
+            />
           </div>
 
           <.button phx-disable-with={gettext("Adding...")}>Add movie</.button>
@@ -93,5 +108,15 @@ defmodule WatchlistWeb.MoveFormComponent do
         |> assign(:form, to_form(changeset))
         |> noreply()
     end
+  end
+
+  defp genre_options() do
+    [
+      {gettext("action"), :action},
+      {gettext("drama"), :drama},
+      {gettext("triller"), :triller},
+      {gettext("horror"), :horror},
+      {gettext("comedy"), :comedy}
+    ]
   end
 end
