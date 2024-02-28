@@ -53,5 +53,21 @@ defmodule WatchlistWeb.WatchlistLiveTest do
 
       assert view =~ movie.title
     end
+
+    test "deletes movie form the list", %{conn: conn} do
+      movie = insert(:movie)
+
+      {:ok, view, html} = live(conn, ~p"/")
+
+      html =~ movie.title
+
+      view
+      |> element("#movies-#{movie.id} div button")
+      |> render_click()
+
+      view = render(view)
+
+      refute view =~ movie.title
+    end
   end
 end

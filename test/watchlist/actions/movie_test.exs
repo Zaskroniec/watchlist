@@ -16,4 +16,13 @@ defmodule Watchlist.Movies.Actions.MovieTest do
       assert {:error, %Ecto.Changeset{}} = Actions.Movie.create(%Movie{}, params)
     end
   end
+
+  describe "delete!/1" do
+    test "deletes movie" do
+      movie = insert(:movie)
+
+      assert movie = Actions.Movie.delete!(movie)
+      assert :deleted = Ecto.get_meta(movie, :state)
+    end
+  end
 end

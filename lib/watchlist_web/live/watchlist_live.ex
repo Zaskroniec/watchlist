@@ -4,7 +4,7 @@ defmodule WatchlistWeb.WatchlistLive do
   import WatchlistWeb.Components
 
   alias WatchlistWeb.MoveFormComponent
-  alias Watchlist.Movies.{Movie, Queries}
+  alias Watchlist.Movies.{Movie, Actions, Queries}
 
   @impl true
   def render(assigns) do
@@ -40,7 +40,14 @@ defmodule WatchlistWeb.WatchlistLive do
             >
               Imdb
             </a>
-            <.button type="button" class="ml-3">Delete</.button>
+            <.button
+              type="button"
+              class="ml-3"
+              phx-click={JS.push("delete") |> JS.hide(to: "##{dom_id}")}
+              phx-value-id={movie.id}
+            >
+              Delete
+            </.button>
           </div>
         </div>
       </div>
@@ -60,6 +67,18 @@ defmodule WatchlistWeb.WatchlistLive do
     socket
     |> stream(:movies, movies)
     |> assign(:movie, %Movie{})
+    |> noreply()
+  end
+
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    deleted_movie =
+      id
+      |> Queries.Movie.get!()
+      |> Actions.Movie.delete!()
+
+    socket
+    |> stream_delete(:movies, deleted_movie)
     |> noreply()
   end
 

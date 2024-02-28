@@ -14,7 +14,7 @@ defmodule WatchlistWeb.MoveFormComponent do
         phx-submit="save"
         id="new-movie-form"
       >
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center rounded-lg border border-gray-300 px-6 py-5">
           <div class="flex-1 mr-10">
             <.input
               field={@form[:title]}
@@ -30,7 +30,7 @@ defmodule WatchlistWeb.MoveFormComponent do
             />
           </div>
 
-          <.button class="" phx-disable-with={gettext("Adding...")}>Add movie</.button>
+          <.button phx-disable-with={gettext("Adding...")}>Add movie</.button>
         </div>
       </.form>
     </div>

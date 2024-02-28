@@ -8,4 +8,9 @@ defmodule Watchlist.Movies.Actions.Movie do
     |> Movie.insert_changeset(params)
     |> Repo.insert()
   end
+
+  @spec delete!(Movie.t()) :: Movie.t()
+  def delete!(model) do
+    Repo.delete!(model)
+  end
 end
