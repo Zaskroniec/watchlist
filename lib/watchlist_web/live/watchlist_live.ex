@@ -3,8 +3,8 @@ defmodule WatchlistWeb.WatchlistLive do
 
   import WatchlistWeb.Components
 
-  alias WatchlistWeb.MoveFormComponent
-  alias Watchlist.Movies.{Movie, Actions, Queries}
+  alias WatchlistWeb.{MovieItemComponent, MovieFormComponent}
+  alias Watchlist.Movies.{Movie, Queries}
 
   @defult_query_params %{"sort" => "desc:title"}
 
@@ -18,10 +18,10 @@ defmodule WatchlistWeb.WatchlistLive do
 
       <h2 class="text-left text-md font-bold mb-2"><%= gettext("Add new movie") %></h2>
       <.live_component
-        module={MoveFormComponent}
+        module={MovieFormComponent}
         id="new-movie-form"
         movie={@movie}
-        notify={fn movie -> send(self(), {:movie_persisted, movie}) end}
+        notify={fn type, movie -> send(self(), {type, movie}) end}
       />
 
       <h2 class="text-left text-md font-bold mt-10 mb-2"><%= gettext("Filter") %></h2>
@@ -40,40 +40,19 @@ defmodule WatchlistWeb.WatchlistLive do
         </div>
 
         <.button type="button" class="self-end" phx-click="sort">
-          Change order
+          <%= gettext("Change order") %>
           <span :if={@query_params["sort"]}><%= humanized_sort(@query_params["sort"]) %></span>
         </.button>
       </div>
 
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-1 mt-10" id="movies" phx-update="stream">
-        <div
-          :for={{dom_id, movie} <- @streams.movies}
-          id={dom_id}
-          class="flex items-center justify-between relative space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:border-gray-400"
-        >
-          <div class="capitalize">
-            <%= movie.title %>
-          </div>
-          <div class="flex items-center">
-            <a
-              :if={movie.imdb_url}
-              href={movie.imdb_url}
-              target="blank"
-              rel="noreferrer"
-              class="underline"
-            >
-              Imdb
-            </a>
-            <.button
-              type="button"
-              class="ml-3"
-              phx-click={JS.push("delete") |> JS.hide(to: "##{dom_id}")}
-              phx-value-id={movie.id}
-            >
-              Delete
-            </.button>
-          </div>
-        </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-1 mt-10" id="movies">
+        <.live_component
+          :for={movie <- @movies}
+          module={MovieItemComponent}
+          movie={movie}
+          id={"movies-#{movie.id}"}
+          notify={fn type, movie -> send(self(), {type, movie}) end}
+        />
       </div>
     </.movie_layout>
     """
@@ -90,24 +69,12 @@ defmodule WatchlistWeb.WatchlistLive do
     movies = Queries.Movie.list(query_params)
 
     socket
-    |> stream(:movies, movies, reset: true)
     |> assign(
+      movies: movies,
       movie: %Movie{},
       form: to_form(query_params, as: :query),
       query_params: query_params
     )
-    |> noreply()
-  end
-
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    deleted_movie =
-      id
-      |> Queries.Movie.get!()
-      |> Actions.Movie.delete!()
-
-    socket
-    |> stream_delete(:movies, deleted_movie)
     |> noreply()
   end
 
@@ -128,16 +95,8 @@ defmodule WatchlistWeb.WatchlistLive do
   end
 
   @impl true
-  def handle_info({:movie_persisted, %Movie{} = movie}, socket) do
-    query_params = socket.assigns.query_params
-
-    if query_params == @defult_query_params do
-      socket
-      |> stream_insert(:movies, movie)
-      |> noreply()
-    else
-      push_to_watchlist(socket, query_params)
-    end
+  def handle_info({_, %Movie{} = _movie}, socket) do
+    push_to_watchlist(socket, socket.assigns.query_params)
   end
 
   defp push_to_watchlist(socket, query_params) do

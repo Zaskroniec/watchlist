@@ -17,6 +17,28 @@ defmodule Watchlist.Movies.Actions.MovieTest do
     end
   end
 
+  describe "update/2" do
+    setup do
+      movie = insert(:movie, title: "Diune")
+
+      {:ok, movie: movie}
+    end
+
+    test "returns updated movie for given params", %{movie: movie} do
+      params = %{"title" => "Star Wars"}
+
+      assert {:ok, movie} = Actions.Movie.update(movie, params)
+
+      assert %Movie{title: "Star Wars"} = movie
+    end
+
+    test "returns errors for given params", %{movie: movie} do
+      params = %{"title" => nil}
+
+      assert {:error, %Ecto.Changeset{}} = Actions.Movie.update(movie, params)
+    end
+  end
+
   describe "delete!/1" do
     test "deletes movie" do
       movie = insert(:movie)

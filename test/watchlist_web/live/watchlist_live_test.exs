@@ -29,14 +29,14 @@ defmodule WatchlistWeb.WatchlistLiveTest do
     test "renders page with form", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
 
-      assert has_element?(view, "#new-movie-form")
+      assert has_element?(view, "#new--movie-form")
     end
 
     test "renders form errors", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
 
       assert view
-             |> form("#new-movie-form")
+             |> form("#new--movie-form")
              |> render_change(%{movie: %{title: "a"}}) =~ "should be at least 3 character"
     end
 
@@ -44,7 +44,7 @@ defmodule WatchlistWeb.WatchlistLiveTest do
       {:ok, view, _html} = live(conn, ~p"/")
 
       view
-      |> form("#new-movie-form", movie: %{title: "Riddick"})
+      |> form("#new--movie-form", movie: %{title: "Riddick"})
       |> render_submit()
 
       view = render(view)
@@ -62,7 +62,7 @@ defmodule WatchlistWeb.WatchlistLiveTest do
       assert html =~ movie.title
 
       view
-      |> element("#movies-#{movie.id} div button")
+      |> element("#movies-#{movie.id} div #delete-movies-#{movie.id}")
       |> render_click()
 
       view = render(view)
@@ -79,6 +79,25 @@ defmodule WatchlistWeb.WatchlistLiveTest do
       assert html =~ movie_1.title
 
       refute html =~ movie_2.title
+    end
+
+    test "opens edit mode in movie and updates item in the list", %{conn: conn} do
+      movie = insert(:movie, title: "Star Wars", genre: :action)
+
+      {:ok, view, html} = live(conn, ~p"/")
+
+      assert html =~ movie.title
+
+      view
+      |> element("#movies-#{movie.id} div #edit-movies-#{movie.id}")
+      |> render_click()
+
+      html =
+        view
+        |> form("#edit-#{movie.id}-movie-form", movie: %{title: "Riddick"})
+        |> render_submit()
+
+      assert html =~ "Riddick"
     end
   end
 end

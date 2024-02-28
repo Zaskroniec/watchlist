@@ -9,6 +9,13 @@ defmodule Watchlist.Movies.Actions.Movie do
     |> Repo.insert()
   end
 
+  @spec update(Movie.t(), map()) :: {:ok, Movie.t()} | {:error, Ecto.Changeset.t()}
+  def update(model, params) do
+    model
+    |> Movie.update_changeset(params)
+    |> Repo.update()
+  end
+
   @spec delete!(Movie.t()) :: Movie.t()
   def delete!(model) do
     Repo.delete!(model)

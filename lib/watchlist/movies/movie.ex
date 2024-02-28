@@ -26,6 +26,18 @@ defmodule Watchlist.Movies.Movie do
     model
     |> cast(params, [:title, :imdb_url, :rate, :genre])
     |> change(watchlist_id: @default_watchlist_id)
+    |> changeset()
+  end
+
+  @spec update_changeset(__MODULE__.t(), map()) :: Ecto.Changeset.t()
+  def update_changeset(model, params \\ %{}) do
+    model
+    |> cast(params, [:title, :imdb_url, :rate, :genre])
+    |> changeset()
+  end
+
+  defp changeset(changeset) do
+    changeset
     |> validate_title()
     |> validate_imdb_url()
     |> validate_number(:rate,
