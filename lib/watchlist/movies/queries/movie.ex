@@ -7,13 +7,11 @@ defmodule Watchlist.Movies.Queries.Movie do
   alias Watchlist.Movies.Movie
   alias Watchlist.Repo
 
-  @default_watchlist_id 1
-
   @spec list(map()) :: list(Movie.t())
   def list(_params \\ %{}) do
     Movie
     |> from(as: :movies)
-    |> where([movies: m], m.watchlist_id == @default_watchlist_id)
+    |> where([movies: m], m.watchlist_id == ^Movie.default_watchlist_id())
     |> Repo.all()
   end
 end

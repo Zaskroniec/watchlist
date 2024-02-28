@@ -3,7 +3,8 @@ defmodule WatchlistWeb.WatchlistLive do
 
   import WatchlistWeb.Components
 
-  alias Watchlist.Movies.Queries
+  alias WatchlistWeb.MoveFormComponent
+  alias Watchlist.Movies.{Movie, Queries}
 
   @impl true
   def render(assigns) do
@@ -13,10 +14,17 @@ defmodule WatchlistWeb.WatchlistLive do
         <%= gettext("Watchlist") %>
       </h1>
 
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-1" id="movies" phx-update="stream">
+      <.live_component
+        module={MoveFormComponent}
+        id="new-movie-form"
+        movie={@movie}
+        notify={fn movie -> send(self(), {:movie_persisted, movie}) end}
+      />
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-1 mt-10" id="movies" phx-update="stream">
         <div
           :for={{dom_id, movie} <- @streams.movies}
-          id={"movie-#{dom_id}"}
+          id={dom_id}
           class="flex items-center justify-between relative space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:border-gray-400"
         >
           <div class="capitalize">
@@ -51,6 +59,14 @@ defmodule WatchlistWeb.WatchlistLive do
 
     socket
     |> stream(:movies, movies)
+    |> assign(:movie, %Movie{})
+    |> noreply()
+  end
+
+  @impl true
+  def handle_info({:movie_persisted, %Movie{} = movie}, socket) do
+    socket
+    |> stream_insert(:movies, movie)
     |> noreply()
   end
 end
