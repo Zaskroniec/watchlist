@@ -59,7 +59,7 @@ defmodule WatchlistWeb.WatchlistLiveTest do
 
       {:ok, view, html} = live(conn, ~p"/")
 
-      html =~ movie.title
+      assert html =~ movie.title
 
       view
       |> element("#movies-#{movie.id} div button")
@@ -68,6 +68,17 @@ defmodule WatchlistWeb.WatchlistLiveTest do
       view = render(view)
 
       refute view =~ movie.title
+    end
+
+    test "filters movie list", %{conn: conn} do
+      movie_1 = insert(:movie, title: "Star Wars")
+      movie_2 = insert(:movie, title: "Lord of the rings")
+
+      {:ok, _view, html} = live(conn, ~p"/?query[title]=#{movie_1.title}")
+
+      assert html =~ movie_1.title
+
+      refute html =~ movie_2.title
     end
   end
 end
