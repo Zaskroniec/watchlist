@@ -1,4 +1,7 @@
 defmodule Watchlist.Movies.Actions.Movie do
+  @moduledoc """
+  Module contaning all functions related to Movie persistance
+  """
   alias Watchlist.Movies.Movie
   alias Watchlist.Repo
 
