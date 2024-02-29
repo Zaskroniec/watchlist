@@ -1,7 +1,8 @@
 defmodule Watchlist.Movies.Actions.MovieTest do
   use Watchlist.DataCase, async: true
 
-  alias Watchlist.Movies.{Movie, Actions}
+  alias Watchlist.Movies.Actions
+  alias Watchlist.Movies.Movie
 
   describe "create/2" do
     test "returns created movie for given params" do

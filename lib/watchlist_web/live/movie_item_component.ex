@@ -1,8 +1,9 @@
 defmodule WatchlistWeb.MovieItemComponent do
   use WatchlistWeb, :live_component
 
+  alias Watchlist.Movies.Actions
+  alias Watchlist.Movies.Queries
   alias WatchlistWeb.MovieFormComponent
-  alias Watchlist.Movies.{Actions, Queries}
 
   @impl true
   def render(assigns) do
@@ -23,7 +24,6 @@ defmodule WatchlistWeb.MovieItemComponent do
 
       <div
         :if={not @edit_mode}
-        id={@id}
         class="flex items-center justify-between relative space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:border-gray-400"
       >
         <div class="capitalize">

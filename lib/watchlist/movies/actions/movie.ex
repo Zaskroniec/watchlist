@@ -1,6 +1,6 @@
 defmodule Watchlist.Movies.Actions.Movie do
-  alias Watchlist.Repo
   alias Watchlist.Movies.Movie
+  alias Watchlist.Repo
 
   @spec create(Movie.t(), map()) :: {:ok, Movie.t()} | {:error, Ecto.Changeset.t()}
   def create(model, params) do

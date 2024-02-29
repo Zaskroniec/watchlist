@@ -1,7 +1,9 @@
 defmodule WatchlistWeb.MovieFormComponent do
   use WatchlistWeb, :live_component
 
-  alias Watchlist.Movies.{Movie, Actions, Queries}
+  alias Watchlist.Movies.Actions
+  alias Watchlist.Movies.Movie
+  alias Watchlist.Movies.Queries
 
   @impl true
   def render(assigns) do

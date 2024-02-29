@@ -3,9 +3,12 @@ defmodule WatchlistWeb.WatchlistLive do
 
   import WatchlistWeb.Components
 
-  alias WatchlistWeb.{MovieItemComponent, MovieFormComponent}
-  alias Watchlist.Movies.{Movie, Queries}
+  alias Watchlist.Movies.Movie
+  alias Watchlist.Movies.Queries
+  alias WatchlistWeb.MovieFormComponent
+  alias WatchlistWeb.MovieItemComponent
 
+  @querable_keys ~w(title sort)
   @defult_query_params %{"sort" => "desc:title"}
 
   @impl true
@@ -45,42 +48,62 @@ defmodule WatchlistWeb.WatchlistLive do
         </.button>
       </div>
 
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-1 mt-10" id="movies">
-        <.live_component
-          :for={movie <- @movies}
-          module={MovieItemComponent}
-          movie={movie}
-          id={"movies-#{movie.id}"}
-          notify={fn type, movie -> send(self(), {type, movie}) end}
-        />
+      <div
+        class="grid grid-cols-1 gap-4 sm:grid-cols-1 mt-10"
+        id="movies"
+        phx-update="stream"
+        phx-viewport-bottom="scroll"
+      >
+        <%= for {dom_id, movie} <- @streams.movies do %>
+          <div id={dom_id}>
+            <.live_component
+              module={MovieItemComponent}
+              movie={movie}
+              id={dom_id}
+              notify={fn type, movie -> send(self(), {type, movie}) end}
+            />
+          </div>
+        <% end %>
       </div>
     </.movie_layout>
     """
   end
 
   @impl true
-  def mount(_params, _session, socket) do
-    ok(socket)
-  end
+  def mount(params, _session, socket) do
+    query_params =
+      params
+      |> Map.get("query", @defult_query_params)
+      |> Map.take(@querable_keys)
 
-  @impl true
-  def handle_params(params, _uri, socket) do
-    query_params = Map.get(params, "query", @defult_query_params)
-    movies = Queries.Movie.list(query_params)
+    page = Queries.Movie.default_page()
+    movies = Queries.Movie.list(Map.put(query_params, "page", page))
 
     socket
+    |> stream(:movies, movies, reset: true)
     |> assign(
-      movies: movies,
+      page: page,
       movie: %Movie{},
       form: to_form(query_params, as: :query),
       query_params: query_params
     )
-    |> noreply()
+    |> ok()
   end
 
   @impl true
-  def handle_event("query", %{"query" => params}, socket) do
-    push_to_watchlist(socket, params)
+  def handle_params(_params, _uri, socket) do
+    noreply(socket)
+  end
+
+  @impl true
+  def handle_event("query", %{"query" => query_params}, socket) do
+    movies = Queries.Movie.list(query_params)
+
+    socket
+    |> stream(:movies, movies, reset: true)
+    |> assign(page: Queries.Movie.default_page(), query_params: query_params)
+    |> push_to_watchlist(query_params)
+    |> noreply()
   end
 
   @impl true
@@ -91,20 +114,52 @@ defmodule WatchlistWeb.WatchlistLive do
         query_params -> Map.put(query_params, "sort", "asc:title")
       end
 
-    push_to_watchlist(socket, query_params)
+    movies = Queries.Movie.list(query_params)
+
+    socket
+    |> stream(:movies, movies, reset: true)
+    |> assign(page: Queries.Movie.default_page(), query_params: query_params)
+    |> push_to_watchlist(query_params)
+    |> noreply()
+  end
+
+  @impl true
+  def handle_event("scroll", _params, socket) do
+    next_page = socket.assigns.page + 1
+    query_params = socket.assigns.query_params
+    movies = Queries.Movie.list(Map.put(query_params, "page", next_page))
+
+    socket =
+      Enum.reduce(movies, socket, fn movie, socket -> stream_insert(socket, :movies, movie) end)
+
+    page =
+      if(length(movies) < Queries.Movie.default_per_page(),
+        do: socket.assigns.page,
+        else: next_page
+      )
+
+    socket
+    |> assign(:page, page)
+    |> push_to_watchlist(query_params)
+    |> noreply()
   end
 
   @impl true
   def handle_info({_, %Movie{} = _movie}, socket) do
-    push_to_watchlist(socket, socket.assigns.query_params)
+    query_params = socket.assigns.query_params
+    movies = Queries.Movie.list(query_params)
+
+    socket
+    |> stream(:movies, movies, reset: true)
+    |> assign(page: Queries.Movie.default_page())
+    |> push_to_watchlist(query_params)
+    |> noreply()
   end
 
   defp push_to_watchlist(socket, query_params) do
     path = WatchlistWeb.Router.Helpers.watchlist_path(socket, :index, query: query_params)
 
-    socket
-    |> push_patch(to: path)
-    |> noreply()
+    push_patch(socket, to: path)
   end
 
   defp humanized_sort("asc:title"), do: "#{gettext("Title")} #{gettext("descending")}"
