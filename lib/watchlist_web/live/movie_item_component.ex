@@ -33,8 +33,8 @@ defmodule WatchlistWeb.MovieItemComponent do
           <a
             :if={@movie.imdb_url}
             href={@movie.imdb_url}
-            target="blank"
-            rel="noreferrer"
+            target="_blank"
+            rel="noopener noreferrer"
             class="underline"
           >
             <%= gettext("Imdb") %>
